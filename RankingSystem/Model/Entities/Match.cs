@@ -1,6 +1,6 @@
 using System;
 
-namespace RankingSystem.entities
+namespace RankingSystem.model.entities
 {
     public class Match
     {

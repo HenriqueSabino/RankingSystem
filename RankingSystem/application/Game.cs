@@ -1,22 +1,123 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using RankingSystem.entities;
+using RankingSystem.model.entities;
+using RankingSystem.model.Services;
+using RankingSystem.db;
 
 namespace RankingSystem.application
 {
     class Game
     {
+        private static PlayerService playerService;
+
         static void Main(string[] args)
         {
-            Player player = new Player(1, "HenriqueSabino");
+            playerService = new PlayerService();
+            Menu();
+        }
 
-            PlayMatch(player, 60, 1000, 12);
-            PlayMatch(player, 65, 1005, 15);
+        static void Menu()
+        {
+            Player user = null;
 
-            DisplayPlayerRecords(player);
+            Console.Clear();
 
-            Console.ReadKey();
+            Console.WriteLine("Menu:");
+            Console.WriteLine("1. Register a new player.");
+            Console.WriteLine("2. Login");
+            Console.WriteLine("3. Exit");
+
+            int answer = int.Parse(Console.ReadLine());
+
+            switch (answer)
+            {
+                case 1:
+                    RegisterPlayer(user);
+                    break;
+                case 2:
+                    Login(user);
+                    break;
+                case 3:
+                    DB.CloseConnection();
+                    break;
+            }
+        }
+
+        static void RegisterPlayer(Player user)
+        {
+            Console.Clear();
+
+            Console.Write("Player's Username: ");
+            string username = Console.ReadLine();
+
+            user = new Player();
+            user.UserName = username;
+
+            playerService.SaveOrUpdate(user);
+            PlayerMenu(user);
+        }
+
+        static void Login(Player user)
+        {
+            Console.Clear();
+            Console.Write("Type your user name: ");
+            user = playerService.FindByUserName(Console.ReadLine());
+
+            if (user == null)
+            {
+                Console.WriteLine("Player could not be found.");
+                Menu();
+            }
+            else
+            {
+                PlayerMenu(user);
+            }
+        }
+
+        static void PlayerMenu(Player user)
+        {
+            Console.Clear();
+
+            Console.WriteLine("Welcome {0}", user.UserName);
+
+            Console.WriteLine("Choose an action:");
+            Console.WriteLine("1. Change account name");
+            Console.WriteLine("2. Delete account");
+            Console.WriteLine("3. Logoff");
+
+            int answer = int.Parse(Console.ReadLine());
+
+            switch (answer)
+            {
+                case 1:
+                    ChangeUserName(user);
+                    break;
+                case 2:
+                    DeleteAccount(user);
+                    break;
+                case 3:
+                    Menu();
+                    break;
+            }
+        }
+
+        static void ChangeUserName(Player user)
+        {
+            Console.Clear();
+
+            Console.Write("Type your new user name: ");
+            user.UserName = Console.ReadLine();
+
+            playerService.SaveOrUpdate(user);
+            PlayerMenu(user);
+        }
+
+        static void DeleteAccount(Player user)
+        {
+            playerService.Remove(user);
+            user = null;
+            Menu();
         }
 
         static void SaveMatch(Match match)
