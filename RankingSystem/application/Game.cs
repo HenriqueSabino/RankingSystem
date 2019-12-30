@@ -10,10 +10,12 @@ namespace RankingSystem.application
     class Game
     {
         private static PlayerService playerService;
+        private static PlayerRecordsService playerRecordsService;
 
         static void Main(string[] args)
         {
             playerService = new PlayerService();
+            playerRecordsService = new PlayerRecordsService();
             Menu();
         }
 
@@ -82,21 +84,25 @@ namespace RankingSystem.application
             Console.WriteLine("Welcome {0}", user.UserName);
 
             Console.WriteLine("Choose an action:");
-            Console.WriteLine("1. Change account name");
-            Console.WriteLine("2. Delete account");
-            Console.WriteLine("3. Logoff");
+            Console.WriteLine("1. Register a match");
+            Console.WriteLine("2. Change account name");
+            Console.WriteLine("3. Delete account");
+            Console.WriteLine("4. Logoff");
 
             int answer = int.Parse(Console.ReadLine());
 
             switch (answer)
             {
                 case 1:
-                    ChangeUserName(user);
+                    RegisterMatch(user);
                     break;
                 case 2:
-                    DeleteAccount(user);
+                    ChangeUserName(user);
                     break;
                 case 3:
+                    DeleteAccount(user);
+                    break;
+                case 4:
                     Menu();
                     break;
             }
@@ -115,13 +121,20 @@ namespace RankingSystem.application
 
         static void DeleteAccount(Player user)
         {
+            //removing player and their records from the database
+
+            PlayerRecords records = playerRecordsService.FindById(user.Id.Value);
+            playerRecordsService.Remove(records);
+
             playerService.Remove(user);
+
             user = null;
             Menu();
         }
 
         static void SaveMatch(Match match)
         {
+            /*
             BinaryFormatter formatter = new BinaryFormatter();
             string path = "Players' data/" + match.Player.Id + ".bin";
 
@@ -155,11 +168,58 @@ namespace RankingSystem.application
                     formatter.Serialize(stream, records);
                 }
             }
+            */
+
+            //obtaining the records data from the database if it exists
+            PlayerRecords records = playerRecordsService.FindById(match.Player.Id.Value);
+
+            //if there's no data on the database, create a new record
+            if (records == null)
+            {
+                records = new PlayerRecords();
+                records.PlayerId = match.Player.Id;
+                records.MatchesPlayed = 1;
+                records.BestTime = match.Duration;
+                records.HighScore = match.Score;
+
+                playerRecordsService.SaveOrUpdate(records);
+            }
+            else
+            {
+                records.MatchesPlayed++;
+
+                if (match.Duration < records.BestTime)
+                {
+                    records.BestTime = match.Duration;
+                }
+                if (match.Score > records.HighScore)
+                {
+                    records.HighScore = match.Score;
+                }
+
+                playerRecordsService.SaveOrUpdate(records);
+            }
+            PlayerMenu(match.Player);
         }
 
-        static void PlayMatch(Player player, float duration, int score, int itemsCollected)
+        static void RegisterMatch(Player user)
         {
-            Match match = new Match(player, duration, score, itemsCollected);
+            float duration;
+            int score, itemsCollected;
+
+            Console.Clear();
+            Console.WriteLine("Register a match:");
+
+            Console.Write("Match duration: ");
+            duration = float.Parse(Console.ReadLine());
+
+            Console.Write("Your score: ");
+            score = int.Parse(Console.ReadLine());
+
+            Console.Write("Items collected: ");
+            itemsCollected = int.Parse(Console.ReadLine());
+
+            Match match = new Match(user, duration, score, itemsCollected);
             SaveMatch(match);
         }
 

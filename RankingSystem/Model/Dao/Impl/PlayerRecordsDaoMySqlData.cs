@@ -66,9 +66,9 @@ namespace RankingSystem.model.Dao.Impl
 
                 command.CommandText = "UPDATE records " +
                                     "SET last_updated = @2, " +
-                                    "SET matches_played = @3, " +
-                                    "SET best_time = @4, " +
-                                    "SET high_score = @5, " +
+                                    "matches_played = @3, " +
+                                    "best_time = @4, " +
+                                    "high_score = @5 " +
                                     "WHERE player_id = @1;";
 
                 command.Parameters.AddWithValue("@1", obj.PlayerId);
@@ -132,7 +132,10 @@ namespace RankingSystem.model.Dao.Impl
                     return records;
                 }
                 else
+                {
+                    reader.Close();
                     return null;
+                }
             }
             catch (MySqlException e)
             {
