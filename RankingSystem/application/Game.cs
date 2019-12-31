@@ -230,13 +230,14 @@ namespace RankingSystem.application
 
             Console.WriteLine("Choose an action:");
             Console.WriteLine("1. Register a match");
+            Console.WriteLine("2. Display records");
 
             if (connected)
             {
-                Console.WriteLine("2. Disconnect internet");
-                Console.WriteLine("3. Change account name");
-                Console.WriteLine("4. Delete account");
-                Console.WriteLine("5. Logoff");
+                Console.WriteLine("3. Disconnect internet");
+                Console.WriteLine("4. Change account name");
+                Console.WriteLine("5. Delete account");
+                Console.WriteLine("6. Logoff");
 
                 int answer;
 
@@ -248,16 +249,20 @@ namespace RankingSystem.application
                             RegisterMatch(user);
                             break;
                         case 2:
-                            ChangeConnectionState(false);
+                            DisplayPlayerRecords(user);
                             PlayerMenu(user);
                             break;
                         case 3:
-                            ChangeUserName(user);
+                            ChangeConnectionState(false);
+                            PlayerMenu(user);
                             break;
                         case 4:
-                            DeleteAccount(user);
+                            ChangeUserName(user);
                             break;
                         case 5:
+                            DeleteAccount(user);
+                            break;
+                        case 6:
                             Menu();
                             break;
                         default:
@@ -268,8 +273,8 @@ namespace RankingSystem.application
             }
             else
             {
-                Console.WriteLine("2. Connect internet");
-                Console.WriteLine("3. Logoff");
+                Console.WriteLine("3. Connect internet");
+                Console.WriteLine("4. Logoff");
 
                 int answer;
 
@@ -281,10 +286,14 @@ namespace RankingSystem.application
                             RegisterMatch(user);
                             break;
                         case 2:
-                            ChangeConnectionState(true);
+                            DisplayPlayerRecords(user);
                             PlayerMenu(user);
                             break;
                         case 3:
+                            ChangeConnectionState(true);
+                            PlayerMenu(user);
+                            break;
+                        case 4:
                             Menu();
                             break;
                         default:
@@ -577,25 +586,61 @@ namespace RankingSystem.application
 
         static void DisplayPlayerRecords(Player player)
         {
-            try
-            {
-                string path = "Players' data/" + player.Id + ".rcd";
+            Console.Clear();
 
-                using (Stream stream = File.Open(path, FileMode.Open))
+            PlayerRecords records = null;
+            string localFilePath = "Players' data/" + player.Id + ".rcd";
+
+            if (connected)
+            {
+                records = playerRecordsService.FindById(player.Id.Value);
+
+                if (records != null)
                 {
-                    PlayerRecords records = (PlayerRecords)formatter.Deserialize(stream);
-                    Console.Write("Username: {0}, ", player.UserName);
-                    Console.Write("matches played: {0}, ", records.MatchesPlayed);
-                    Console.Write("best time: {0} sec, ", records.BestTime);
-                    Console.Write("high score: {0} ", records.HighScore);
+                    Console.WriteLine("Username: {0}", player.UserName);
+                    Console.WriteLine("matches played: {0}", records.MatchesPlayed);
+                    Console.WriteLine("best time: {0} sec", records.BestTime);
+                    Console.WriteLine("high score: {0}", records.HighScore);
                     Console.WriteLine("(last updated at {0})", records.LastUpdated);
                 }
+                else
+                {
+                    if (!File.Exists(localFilePath))
+                        Console.WriteLine("There's no records to this player.");
+                    else
+                    {
+                        using (Stream stream = File.Open(localFilePath, FileMode.Open))
+                        {
+                            records = (PlayerRecords)formatter.Deserialize(stream);
 
+                            Console.WriteLine("Username: {0}", player.UserName);
+                            Console.WriteLine("matches played: {0}", records.MatchesPlayed);
+                            Console.WriteLine("best time: {0} sec", records.BestTime);
+                            Console.WriteLine("high score: {0}", records.HighScore);
+                            Console.WriteLine("(last updated at {0})", records.LastUpdated);
+                        }
+                    }
+                }
             }
-            catch (Exception)
+            else
             {
-                Console.WriteLine("{0}'s data could not be obtained.");
+                if (!File.Exists(localFilePath))
+                    Console.WriteLine("There's no records to this player in cache.");
+                else
+                {
+                    using (Stream stream = File.Open(localFilePath, FileMode.Open))
+                    {
+                        records = (PlayerRecords)formatter.Deserialize(stream);
+
+                        Console.WriteLine("Username: {0}", player.UserName);
+                        Console.WriteLine("matches played: {0}", records.MatchesPlayed);
+                        Console.WriteLine("best time: {0} sec", records.BestTime);
+                        Console.WriteLine("high score: {0}", records.HighScore);
+                        Console.WriteLine("(last updated at {0})", records.LastUpdated);
+                    }
+                }
             }
+            Console.ReadKey();
         }
     }
 }

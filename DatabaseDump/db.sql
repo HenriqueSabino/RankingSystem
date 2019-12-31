@@ -24,10 +24,10 @@ DROP TABLE IF EXISTS `players`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `players` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_name` varchar(50) DEFAULT NULL,
+  `user_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_name_UNIQUE` (`user_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,6 +36,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
+INSERT INTO `players` VALUES (32,'Henrique');
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -63,6 +64,7 @@ CREATE TABLE `records` (
 
 LOCK TABLES `records` WRITE;
 /*!40000 ALTER TABLE `records` DISABLE KEYS */;
+INSERT INTO `records` VALUES (32,'2019-12-31 03:11:49',2,58,100);
 /*!40000 ALTER TABLE `records` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -75,4 +77,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-12-29  9:37:44
+-- Dump completed on 2019-12-31 19:13:32
