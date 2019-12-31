@@ -2,6 +2,7 @@ using System;
 
 namespace RankingSystem.model.entities
 {
+    [Serializable]
     public class Player
     {
         private int? id;

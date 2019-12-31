@@ -20,7 +20,7 @@ namespace RankingSystem.model.Services
 
         public void SaveOrUpdate(PlayerRecords obj)
         {
-            if (obj.LastUpdated == null)
+            if (FindById(obj.PlayerId.Value) == null)
             {
                 playerRecordsDao.Insert(obj);
             }
