@@ -171,6 +171,17 @@ namespace RankingSystem.application
                 // making sure it does not continue the method after chaining
                 return;
             }
+
+            string path = "Players' data/" + user.Id + ".usr";
+
+            if (!File.Exists(path))
+            {
+                using (Stream stream = File.Open(path, FileMode.Create))
+                {
+                    formatter.Serialize(stream, user);
+                }
+            }
+
             PlayerMenu(user);
         }
 
