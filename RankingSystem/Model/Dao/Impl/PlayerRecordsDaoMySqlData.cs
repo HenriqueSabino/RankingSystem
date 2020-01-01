@@ -26,6 +26,7 @@ namespace RankingSystem.model.Dao.Impl
 
                 DateTime now = DateTime.Now;
 
+                // inserting the new record
                 command.CommandText = "INSERT INTO records (player_id, last_updated, matches_played, " +
                                                 "best_time, high_score) " +
                                     "VALUES (@1, @2, @3, @4, @5);";
@@ -40,6 +41,7 @@ namespace RankingSystem.model.Dao.Impl
 
                 if (rowsAffected > 0)
                 {
+                    // updating when it was last updated
                     obj.LastUpdated = now;
                 }
                 else
@@ -64,6 +66,8 @@ namespace RankingSystem.model.Dao.Impl
                 command = new MySqlCommand();
                 command.Connection = connection;
 
+                // updating the records on the db
+
                 command.CommandText = "UPDATE records " +
                                     "SET last_updated = @2, " +
                                     "matches_played = @3, " +
@@ -78,6 +82,9 @@ namespace RankingSystem.model.Dao.Impl
                 command.Parameters.AddWithValue("@5", obj.HighScore);
 
                 command.ExecuteNonQuery();
+
+                // updating when it was last updated
+                obj.LastUpdated = now;
             }
             catch (MySqlException e)
             {
@@ -95,6 +102,7 @@ namespace RankingSystem.model.Dao.Impl
                 command = new MySqlCommand();
                 command.Connection = connection;
 
+                // deleting all records of a certain player
                 command.CommandText = "DELETE FROM records " +
                                     "WHERE player_id = @1;";
 

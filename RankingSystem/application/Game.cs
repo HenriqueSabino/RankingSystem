@@ -18,8 +18,18 @@ namespace RankingSystem.application
 
         static void Main(string[] args)
         {
-            playerService = new PlayerService();
-            playerRecordsService = new PlayerRecordsService();
+            // Making sure it can establish a connection before starting the program
+            try
+            {
+                playerService = new PlayerService();
+                playerRecordsService = new PlayerRecordsService();
+            }
+            catch (DBException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadKey();
+                return;
+            }
 
             // forcing syncronization, if the connected variable is set to true
             ChangeConnectionState(connected);
@@ -35,7 +45,7 @@ namespace RankingSystem.application
             if (connected)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Connected to internet.\n");
+                Console.WriteLine("Connected to the internet.\n");
             }
             else
             {
@@ -56,8 +66,13 @@ namespace RankingSystem.application
 
                 int answer;
 
+                // making sure the user inputs a number
                 if (!int.TryParse(Console.ReadLine(), out answer))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input.");
+                    Console.ReadKey();
+                    Console.ForegroundColor = ConsoleColor.White;
                     Menu();
                 }
                 else
@@ -78,11 +93,17 @@ namespace RankingSystem.application
                             DB.CloseConnection();
                             break;
                         default:
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Invalid input.");
+                            Console.ReadKey();
+                            Console.ForegroundColor = ConsoleColor.White;
                             Menu();
                             break;
                     }
                 }
             }
+            // if the player is not connected to the internet they will not be able to register an
+            // account
             else
             {
                 Console.WriteLine("2. Connect internet");
@@ -90,8 +111,13 @@ namespace RankingSystem.application
 
                 int answer;
 
+                // making sure the user inputs a number
                 if (!int.TryParse(Console.ReadLine(), out answer))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input.");
+                    Console.ReadKey();
+                    Console.ForegroundColor = ConsoleColor.White;
                     Menu();
                 }
                 else
@@ -109,6 +135,10 @@ namespace RankingSystem.application
                             DB.CloseConnection();
                             break;
                         default:
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Invalid input.");
+                            Console.ReadKey();
+                            Console.ForegroundColor = ConsoleColor.White;
                             Menu();
                             break;
                     }
@@ -126,7 +156,21 @@ namespace RankingSystem.application
             user = new Player();
             user.UserName = username;
 
-            playerService.SaveOrUpdate(user);
+            // checking for any db errors or invalid user names
+            try
+            {
+                if (string.IsNullOrEmpty(username.Trim()))
+                    throw new ArgumentException("User name cannot be empty.");
+                playerService.SaveOrUpdate(user);
+            }
+            catch (DBException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadKey();
+                RegisterPlayer(user);
+                // making sure it does not continue the method after chaining
+                return;
+            }
             PlayerMenu(user);
         }
 
@@ -141,10 +185,13 @@ namespace RankingSystem.application
 
                 if (user == null)
                 {
+                    Console.WriteLine("Player not found, try registering first.");
+                    Console.ReadKey();
                     Menu();
                 }
                 else
                 {
+                    // if the player successfully logged in, save the user in cache
                     string path = "Players' data/" + user.Id + ".usr";
 
                     if (!File.Exists(path))
@@ -158,6 +205,7 @@ namespace RankingSystem.application
                     PlayerMenu(user);
                 }
             }
+            // if the player is not connected they can only used cached users
             else
             {
                 // Getting all users that were used in the device
@@ -217,7 +265,7 @@ namespace RankingSystem.application
             if (connected)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Connected to internet.\n");
+                Console.WriteLine("Connected to the internet.\n");
             }
             else
             {
@@ -271,6 +319,7 @@ namespace RankingSystem.application
                     }
                 }
             }
+            // if the player is not connected they won't be able to change the db
             else
             {
                 Console.WriteLine("3. Connect internet");
@@ -314,9 +363,31 @@ namespace RankingSystem.application
             Console.Clear();
 
             Console.Write("Type your new user name: ");
-            user.UserName = Console.ReadLine();
+            string newName = Console.ReadLine();
 
-            playerService.SaveOrUpdate(user);
+            // checking if the new name is valid
+            try
+            {
+                if (string.IsNullOrEmpty(newName.Trim()))
+                    throw new ArgumentException("User name cannot be empty.");
+                playerService.SaveOrUpdate(user);
+            }
+            catch (DBException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadKey();
+                ChangeUserName(user);
+                // making sure it does not continue the method after chaining another one
+                return;
+            }
+            catch (ArgumentException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadKey();
+                ChangeUserName(user);
+                // making sure it does not continue the method after chaining another one
+                return;
+            }
             PlayerMenu(user);
         }
 
@@ -530,6 +601,7 @@ namespace RankingSystem.application
 
                 if (!File.Exists(localFilePath))
                 {
+                    // if the file doesn't exists locally, it's the player's first match
                     using (Stream stream = File.Open(localFilePath, FileMode.Create))
                     {
                         records = new PlayerRecords();
@@ -544,6 +616,7 @@ namespace RankingSystem.application
                 }
                 else
                 {
+                    // if there's local data update it
                     using (Stream stream = File.Open(localFilePath, FileMode.Open))
                     {
                         records = (PlayerRecords)formatter.Deserialize(stream);
@@ -595,6 +668,7 @@ namespace RankingSystem.application
             {
                 records = playerRecordsService.FindById(player.Id.Value);
 
+                // if there's data on the database, display it
                 if (records != null)
                 {
                     Console.WriteLine("Username: {0}", player.UserName);
@@ -609,6 +683,7 @@ namespace RankingSystem.application
                         Console.WriteLine("There's no records to this player.");
                     else
                     {
+                        // if there's data locally, but not on the db, display it and sync it
                         using (Stream stream = File.Open(localFilePath, FileMode.Open))
                         {
                             records = (PlayerRecords)formatter.Deserialize(stream);
@@ -619,11 +694,14 @@ namespace RankingSystem.application
                             Console.WriteLine("high score: {0}", records.HighScore);
                             Console.WriteLine("(last updated at {0})", records.LastUpdated);
                         }
+
+                        playerRecordsService.SaveOrUpdate(records);
                     }
                 }
             }
             else
             {
+                // if there's local data display it
                 if (!File.Exists(localFilePath))
                     Console.WriteLine("There's no records to this player in cache.");
                 else

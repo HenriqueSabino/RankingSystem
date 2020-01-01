@@ -41,12 +41,15 @@ namespace RankingSystem.db
 
                             //Could not connect to the server
                             throw new DBException("Could not connect to the server.");
+                        case 1042:
+                            // Server is not running or does not exists
+                            throw new DBException("Server is not running or does not exists.");
                         case 1045:
 
                             //Invalid username/password
                             throw new DBException("Invalid username/password.");
                         default:
-                            throw new DBException(e.Message);
+                            throw new DBException(e.Message + "Error #: " + e.Number + ".");
                     }
                 }
             }
@@ -64,7 +67,7 @@ namespace RankingSystem.db
             catch (MySqlException e)
             {
                 //Wrapping the MySql exception to my own
-                throw new DBException(e.Message);
+                throw new DBException(e.Message + "Error #: " + e.Number + ".");
             }
         }
     }

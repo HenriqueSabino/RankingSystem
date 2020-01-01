@@ -24,6 +24,7 @@ namespace RankingSystem.model.Dao.Impl
                 command = new MySqlCommand();
                 command.Connection = connection;
 
+                // inserting the new player
                 command.CommandText = "INSERT INTO players (user_name) " +
                                     "VALUES (@1); SELECT last_insert_id();";
 
@@ -31,6 +32,7 @@ namespace RankingSystem.model.Dao.Impl
 
                 int rowsAffected = command.ExecuteNonQuery();
 
+                // checking if the insert was sccessful
                 if (rowsAffected > 0)
                 {
                     command = new MySqlCommand();
@@ -40,6 +42,7 @@ namespace RankingSystem.model.Dao.Impl
 
                     MySqlDataReader reader = command.ExecuteReader();
 
+                    // getting the player id from the database and setting it
                     if (reader.HasRows)
                     {
                         reader.Read();
@@ -55,7 +58,14 @@ namespace RankingSystem.model.Dao.Impl
             }
             catch (MySqlException e)
             {
-                throw new DBException(e.Message);
+                switch (e.Number)
+                {
+                    // If the user name is not unique
+                    case 1062:
+                        throw new DBException("This user name has already been taken.");
+                    default:
+                        throw new DBException(e.Message + "Error: " + e.Number + ".");
+                }
             }
         }
 
@@ -68,6 +78,7 @@ namespace RankingSystem.model.Dao.Impl
                 command = new MySqlCommand();
                 command.Connection = connection;
 
+                // updating the player user name
                 command.CommandText = "UPDATE players " +
                                     "SET user_name = @1 " +
                                     "WHERE id = @2;";
@@ -92,6 +103,7 @@ namespace RankingSystem.model.Dao.Impl
                 command = new MySqlCommand();
                 command.Connection = connection;
 
+                //deleting player
                 command.CommandText = "DELETE FROM players " +
                                     "WHERE id = @1;";
 
@@ -122,6 +134,7 @@ namespace RankingSystem.model.Dao.Impl
 
                 reader = command.ExecuteReader();
 
+                // checking if there's data to read
                 if (reader.Read())
                 {
                     Player player = InstantiatePlayer(reader);
@@ -129,7 +142,11 @@ namespace RankingSystem.model.Dao.Impl
                     return player;
                 }
                 else
+                {
+                    // closing the reader
+                    reader.Close();
                     return null;
+                }
             }
             catch (MySqlException e)
             {
@@ -154,6 +171,7 @@ namespace RankingSystem.model.Dao.Impl
 
                 reader = command.ExecuteReader();
 
+                // checking if there's data to read
                 if (reader.Read())
                 {
                     Player player = InstantiatePlayer(reader);
@@ -162,6 +180,7 @@ namespace RankingSystem.model.Dao.Impl
                 }
                 else
                 {
+                    // closing the reader
                     reader.Close();
                     return null;
                 }
